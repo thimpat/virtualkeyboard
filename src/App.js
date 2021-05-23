@@ -17,23 +17,57 @@
  * limitations under the License.
  */
 
-import { Lightning, Utils, Log } from '@lightningjs/sdk'
-import { VIEWPORT } from './settings.json'
+/**
+ * NOTE:
+ * Template key name starts with a capital
+ */
+
+import { Lightning, Utils } from '@lightningjs/sdk'
+import { VIEWPORT, KEYBOARD } from './settings.json'
 import virtualKeyboard from './VirtualKeyboard'
 import searchBox from './SearchBox'
-
-// console.info(keys[0][0])
-// console.info(JSON.stringify(keys[0][0]), null, 2)
 
 export default class App /*Lightning.Application, */ extends Lightning.Component {
   static getFonts() {
     return [{ family: 'Regular', url: Utils.asset('fonts/Roboto-Regular.ttf') }]
   }
 
+  updateButton(properties, textColor, bgColor, colorLeft, colorRight) {
+    const textElement = this.tag(properties.textTag)
+    const rectangleElement = this.tag(properties.rectangleTag)
+    textElement.text.textColor = textColor
+    rectangleElement.color = bgColor
+    rectangleElement.colorLeft = colorLeft
+    rectangleElement.colorRight = colorRight
+  }
+
+  clearActiveButton() {
+    const properties = virtualKeyboard.getActiveTags()
+    this.updateButton(
+      properties,
+      KEYBOARD.textColor,
+      KEYBOARD.keyBgColor,
+      KEYBOARD.colorLeft,
+      KEYBOARD.colorRight
+    )
+  }
+
+  paintActiveButton() {
+    const properties = virtualKeyboard.getActiveTags()
+    this.updateButton(
+      properties,
+      KEYBOARD.focusTextColor,
+      KEYBOARD.focusKeyBgColor,
+      KEYBOARD.focusKeyBgColor,
+      KEYBOARD.focusKeyBgColor
+    )
+  }
+
   static _template() {
     virtualKeyboard.init()
     const keyboardTemplate = virtualKeyboard.generateTemplate()
-    const searchBoxTemplate = searchBox.generateTemplate()
+
+    const searchBoxTemplate = searchBox.init().generateTemplate()
 
     const keys = {
       Background: {
@@ -42,39 +76,10 @@ export default class App /*Lightning.Application, */ extends Lightning.Component
         color: 0xfffbb03b,
         src: Utils.asset('images/background.png'),
       },
-      // Logo: {
-      //   mountX: 0.5,
-      //   mountY: 1,
-      //   x: 960,
-      //   y: 600,
-      //   src: Utils.asset('images/search.jpg'),
-      // },
-      // SearchBox: searchBoxTemplate,
-      // SearchBox: {
-      //   mountX: 0.5,
-      //   mountY: 1,
-      //   x: 960,
-      //   y: 600,
-      //   src: Utils.asset('images/search.png'),
-      // },
-      // SearchBox2: {
-      //   texture: lng.Tools.getRoundRect(400, 60, 4, 3, '0xffffffff', true, '0xffffffff'),
-      //   // Shadow: {
-      //   //   x: 10,
-      //   //   y: 10,
-      //   //   zIndex: 1,
-      //   //   color: 0x66000000,
-      //   //   texture: lng.Tools.getShadowRect(rectangleWidth, rectangleHeight, radius, blur, margin),
-      //   // },
-      // },
-      commandText: { x: 50, y: 28, text: { text: 'gffgfgfg', fontSize: 22 } },
+      SearchText: { x: 0, y: 0, text: { text: 'gffgfgfg', fontSize: 92, color: '0xff000000' } },
     }
 
     return { ...keys, ...keyboardTemplate, ...searchBoxTemplate }
-  }
-
-  set commandText(v) {
-    // this.tag('commandText').patch({ text: { text: `Animation command: ${v}` } })
   }
 
   _init() {
@@ -92,49 +97,42 @@ export default class App /*Lightning.Application, */ extends Lightning.Component
       })
       .start()
 
-    // this._myAnimation = this.tag('Logo').animation({
-    //   duration: 3,
-    //   repeat: -1,
-    //   stopMethod: 'immediate',
-    //   actions: [
-    //     { p: 'y', v: { 0: { v: 450, sm: 0 }, 0.5: { v: 100, sm: 1 }, 1: { v: 450, sm: 0 } } },
-    //   ],
-    // })
+    this.paintActiveButton()
   }
 
   _handleLeft() {
-    this.tag('Logo').stop()
-    this._myAnimation = this.tag('Logo')
-      .animation({
-        duration: 3,
-        repeat: -1,
-        stopMethod: 'immediate',
-        actions: [{ p: 'x', v: { 0: { v: 450, sm: 0 }, 0.5: { v: 100, sm: 1 } } }],
-      })
-      .start()
-
-    // this._myAnimation.start()
+    this.clearActiveButton()
+    virtualKeyboard.moveCursorLeft()
+    this.paintActiveButton()
   }
 
   _handleRight() {
-    this.tag('Logo').stop()
-    this._myAnimation = this.tag('Logo')
-      .animation({
-        duration: 3,
-        repeat: -1,
-        stopMethod: 'immediate',
-        actions: [
-          { p: 'y', v: { 0: { v: 450, sm: 0 }, 0.5: { v: 100, sm: 1 }, 1: { v: 450, sm: 0 } } },
-        ],
-      })
-      .start()
+    this.clearActiveButton()
+    virtualKeyboard.moveCursorRight()
+    this.paintActiveButton()
   }
 
   _handleUp() {
-    alert(3)
+    this.clearActiveButton()
+    virtualKeyboard.moveCursorUp()
+    this.paintActiveButton()
   }
 
   _handleDown() {
-    alert(4)
+    this.clearActiveButton()
+    virtualKeyboard.moveCursorDown()
+    this.paintActiveButton()
+  }
+
+  /**
+   * NOTE: Select on a remote control matches Enter on a keyboard
+   * @private
+   */
+  _handleEnter() {
+    this.tag('SearchText').text.text = 'Search'
+  }
+
+  _handleBack() {
+    alert(3234)
   }
 }

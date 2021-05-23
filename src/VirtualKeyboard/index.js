@@ -1,7 +1,25 @@
 import {KEYBOARD, VIEWPORT} from "../settings.json"
+import {Log} from '@lightningjs/sdk'
 
 class VirtualKeyboard {
-  #keys = KEYBOARD.setup.uk.layout
+  /**
+   * Original keyboard layout with rows and columns
+   * @type {[string[]|number[]|{"text": string, "type": string}[]]}
+   */
+  #layout = KEYBOARD.setup.uk.layout
+
+  /**
+   * keyboard layout with rows and columns to be used for navigation
+   * The original layout may contain some invalid/undefined/unreliable keys.
+   * @type {[{"text": string, "type": string}[]]}
+   */
+  #convertedLayout = []
+
+  /**
+   * Flatten version of the layout to be used by the Lightning templating system
+   * @type {{}}
+   */
+  #template = null
 
   #keyboardDefaultPositionX = 0
 
@@ -24,12 +42,59 @@ class VirtualKeyboard {
   #charactersPerLine = []
   #nbMaxCharsPerLine = 1
 
+  // ---------
+  #cursorX = 9
+  #cursorY = 1
+  #pointer = null
+
+
+  /**
+   * Extract from the settings file (layout key) the object that matches the entry
+   * @param input
+   * @returns {{}}
+   */
+  static convertEntryToKeyObject(input = "") {
+    let obj = {}
+    if (typeof input === 'object') {
+      obj = input
+    } else {
+      obj.text = input.toString()
+    }
+    return obj
+  }
+
+  /**
+   * Extract from the settings file (layout key) the string that matches the entry
+   * @param input
+   * @returns {string}
+   */
+  static convertEntryToChar(input) {
+    return this.convertEntryToKeyObject(input).text
+  }
+
+  /**
+   * Generate tag name for template element
+   * @param prefix
+   * @param name
+   */
+  generateTag(prefix = "", name = "") {
+    try {
+      prefix = prefix.trim()
+      name = name.toString().trim()
+
+      // Lightning wants the first letter to always be capitalized
+      prefix = prefix.charAt(0).toUpperCase() + prefix.slice(1)
+      return `${prefix}${name}`
+    } catch (e) {
+      Log.error(e)
+    }
+  }
 
   /**
    * Set size required for a single key
    */
   setupRowPositions() {
-    this.#keys.map((line, num) => {
+    this.#layout.map((line, num) => {
       let charactersPerLine = 0
       line.map((input) => {
         const chars = VirtualKeyboard.convertEntryToChar(input)
@@ -43,19 +108,40 @@ class VirtualKeyboard {
     this.#singleKeyboardWidth = this.#keyboardWidth / this.#nbMaxCharsPerLine
   }
 
+  countCharactersRow(rowNumber) {
+    if (!this.#charactersPerLine || !this.#charactersPerLine[rowNumber]) {
+      console.error(`You must initialise the Virtual Keyboard before calling this method`)
+      return -1
+    }
+    return this.#charactersPerLine[rowNumber]
+  }
+
+  /**
+   * Return virtual keyboard rows number
+   * @returns {number}
+   */
+  countRows() {
+    if (!this.#convertedLayout) {
+      Log.error(`You must generate a Virtual Keyboard before calling this method`)
+      return -1
+    }
+    return this.#convertedLayout.length
+  }
+
   /**
    * Calculate offsets and widths of every row
    */
   calculateOffsetRows() {
-    this.#keys.map((line, num) => {
+    this.#layout.map((line, num) => {
 
       // Width
-      this.#keyboardWidthX[num] = this.#charactersPerLine[num] * this.#singleKeyboardWidth
+      this.#keyboardWidthX[num] = this.countCharactersRow(num) * this.#singleKeyboardWidth
 
       // Positions
       this.#keyboardPositionX[num] =
         this.#keyboardDefaultPositionX +
-        (this.#keyboardWidth - this.#keyboardWidthX[num]) / 2
+        (this.#keyboardWidth - this.#keyboardWidthX[num]) / 2 +
+        this.#singleKeyboardWidth / 2
     })
   }
 
@@ -71,7 +157,7 @@ class VirtualKeyboard {
 
     this.#margin = margin
 
-    this.#singleKeyboardHeight = this.#keyboardHeight / this.#keys.length
+    this.#singleKeyboardHeight = this.#keyboardHeight / this.#layout.length
     this.setupRowPositions()
 
     this.calculateOffsetRows()
@@ -81,21 +167,8 @@ class VirtualKeyboard {
     } else {
       this.#keyboardPositionY = height - this.#keyboardHeight
     }
-  }
 
-  /**
-   * Extract from the settings file (layout key) the character/string that matches a key
-   * @param input
-   * @returns {string}
-   */
-  static convertEntryToChar(input) {
-    let chars = ""
-    if (typeof input === 'object' && input !== null) {
-      chars = "" + input.text
-    } else {
-      chars = "" + input
-    }
-    return chars
+    return this /** For chaining **/
   }
 
   /**
@@ -111,7 +184,7 @@ class VirtualKeyboard {
     const radius = 8
     const strokeWidth = 3
     const strokeColor = "0xff00ff00" // 0xffff00ff
-    const fillColor = "0xff00ffff"
+    const fillColor = KEYBOARD.keyBgColor
 
     const blur = 4
     const margin = blur * 2
@@ -119,8 +192,9 @@ class VirtualKeyboard {
     return {
       x: x - this.#singleKeyboardWidth / 2 + this.#singleKeyboardWidth / 8,
       y: y - rectangleHeight / 6,
-      color: KEYBOARD.backgroundColorKeys,
-      colorLeft: 0xFF636EFB, colorRight: 0xFF1C27bC,
+      color: KEYBOARD.keyBgColor,
+      colorLeft: KEYBOARD.colorLeft,
+      colorRight: KEYBOARD.colorRight,
       texture: lng.Tools.getRoundRect(rectangleWidth, rectangleHeight, radius, strokeWidth, strokeColor, true, fillColor),
       Shadow: {
         x: 10,
@@ -150,7 +224,6 @@ class VirtualKeyboard {
     key.x = col * this.#singleKeyboardWidth + this.#keyboardPositionX[row]
     key.y = row * this.#singleKeyboardHeight + this.#keyboardPositionY
 
-    // key.color = KEYBOARD.colorKeys
     key.shadow = true
 
     key.text = {
@@ -158,7 +231,7 @@ class VirtualKeyboard {
       fontFace: 'Regular',
       fontSize: this.#singleKeyboardHeight / 2,
       wordWrap: true, wordWrapWidth: 450, lineHeight: 30,
-      textColor: 0xbbffffff,
+      textColor: KEYBOARD.textColor,
       shadow: true
     }
 
@@ -171,18 +244,20 @@ class VirtualKeyboard {
    * @returns {{}}
    */
   generateTemplate() {
-    const keyboard = {}
-    const keys = this.#keys
+    this.#template = {}
+    const layout = this.#layout
 
-    for (let iRow = 0; iRow < keys.length; ++iRow) {
-      const line = keys[iRow]
+    for (let iRow = 0; iRow < layout.length; ++iRow) {
+      const line = layout[iRow]
       let count = 0
+      this.#convertedLayout[iRow] = []
 
       for (let iCol = 0; iCol < line.length; ++iCol) {
 
         const input = line[iCol]
 
-        const chars = VirtualKeyboard.convertEntryToChar(input)
+        const objInput = VirtualKeyboard.convertEntryToKeyObject(input)
+        const chars = objInput.text
 
         const obj = this.generateSingleKeyTemplate(chars, count, iRow)
         count += chars.length
@@ -192,15 +267,165 @@ class VirtualKeyboard {
         }
 
         const name = (input && input.type) ? input.type : input
-        keyboard[`Rectangle${name}`] = obj.rectangle
-        keyboard[`Text${name}`] = key
+
+        const rectangleTag = this.generateTag("Rectangle", name)
+        this.#template[rectangleTag] = obj.rectangle
+
+        const textTag = this.generateTag("Text", name)
+        this.#template[textTag] = key
+
+        objInput.textTag = textTag
+        objInput.rectangleTag = rectangleTag
+
+        for (let iChar = 0; iChar < chars.length; ++iChar)
+        {
+          this.#convertedLayout[iRow].push(objInput)
+        }
       }
 
     }
-    return keyboard
+
+    this.#pointer = this.getCursorInfo()
+
+    return this.#template
   }
 
 
+  // =================================================
+  // User actions
+  // =================================================
+  getActiveTags() {
+    const row = this.#convertedLayout[this.#cursorY]
+    return row[this.#cursorX]
+  }
+
+  /**
+   * Return the tag id the cursor is on
+   */
+  getCursorInfo() {
+    const isLimitLeft = this.#cursorX <= 0
+    const isLimitRight = this.#cursorX >= this.#convertedLayout[this.#cursorY].length - 1
+    const isLimitTop = this.#cursorY <= 0
+    const isLimitBottom = this.#cursorY >= this.#convertedLayout[this.#cursorY].length - 1
+
+    // const gridXdPosition = this.getGridInfo(this.#cursorY, this.#cursorX).gridPosition
+    // const gridDownPositions = this.getGridRow(this.#cursorY + 1)
+
+    // console.log(gridXdPosition, gridDownPositions)
+
+    // let newX = -1
+    // let canGoDown = false
+    // if (this.#cursorY < this.countRows()) {
+    //   canGoDown = gridXdPosition >= gridDownPositions.leftGrid && gridXdPosition <= gridDownPositions.rightGrid
+    //   if (canGoDown) {
+    //     newX = this.getGridInfo(this.#cursorY + 1, this.#cursorX)
+    //   }
+    // }
+
+    const row = this.#convertedLayout[this.#cursorY]
+
+    let tags = {}
+    if (this.#cursorX < row.length) {
+      tags = row[this.#cursorX]
+    }
+
+    const result = {
+      cursorX: this.#cursorX,
+      cursorY: this.#cursorY,
+      textTag: tags.textTag,
+      rectangleTag: tags.rectangleTag,
+      isLimitLeft,
+      isLimitRight,
+      isLimitTop,
+      isLimitBottom,
+      // canGoDown,
+      // newX
+    }
+
+    console.log(result)
+
+    return result
+  }
+
+  getGridInfo(row, col) {
+    if (row < 0 || row >= this.countRows()) {
+      return null
+    }
+
+    const startX = Math.floor((this.#nbMaxCharsPerLine - this.countCharactersRow(row)) / 2)
+    // const endX = startX + this.countCharactersRow(row)
+
+    // col position in the grid
+    const gridPosition = startX + col
+
+    // col position
+    const keyPosition = gridPosition - startX
+
+    return {
+      gridPosition,
+      keyPosition
+    }
+  }
+
+  getGridRow(row) {
+    const leftGrid = this.getGridInfo(row, 0).gridPosition
+    const rightGrid = this.getGridInfo(row, this.countCharactersRow(row)).gridPosition
+
+    return {
+      leftGrid, rightGrid
+    }
+  }
+
+  cloneCursorInformation() {
+    const clone = JSON.parse(JSON.stringify(this.#pointer))
+    console.log(clone)
+    return clone
+  }
+
+  moveCursorUp() {
+    if (this.#cursorY <= 0)
+    {
+      return
+    }
+
+    --this.#cursorY
+    this.#pointer = this.getCursorInfo()
+    return this.cloneCursorInformation()
+  }
+
+  moveCursorDown0() {
+    if (!this.#pointer.canGoDown) {
+      return
+    }
+
+    ++this.#cursorY
+    this.#cursorX = this.#pointer.newX.keyPosition
+    this.#pointer = this.getCursorInfo()
+    return this.cloneCursorInformation()
+  }
+
+  moveCursorDown() {
+    if (this.#cursorY >= this.countRows() - 1)
+    {
+      return
+    }
+
+    ++this.#cursorY
+    this.#pointer = this.getCursorInfo()
+    return this.cloneCursorInformation()
+  }
+
+  moveCursorLeft() {
+    this.#cursorX = this.#pointer.isLimitLeft ? this.countCharactersRow(this.#cursorY) - 1 : --this.#cursorX
+    this.#pointer = this.getCursorInfo()
+    return this.cloneCursorInformation()
+  }
+
+  moveCursorRight() {
+    this.#cursorX = this.#pointer.isLimitRight ? 0 : ++this.#cursorX
+    this.#pointer = this.getCursorInfo()
+    return this.cloneCursorInformation()
+  }
 }
 
 const virtualKeyboard = new VirtualKeyboard()

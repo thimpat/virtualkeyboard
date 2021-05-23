@@ -1,24 +1,43 @@
 {
+  "SEARCHBOX":
+  {
+    "height": 60,
+    "top": 60
+  },
   "KEYBOARD":
   {
     "viewportPercentage": 80,
-    "backgroundColorKeys": "0xFFF3AB3C",
     "colorKeys": "0xFF000000",
     "position": "bottom",
     "viewportHeight": 600,
+    "colorLeft": "0xFF636EFB",
+    "colorRight": "0xFF1C27bC",
+    "textColor": "0xbbffffff",
+    "keyBgColor": "0xFFF3AB3C",
+    "focusTextColor": "0xff00ff00",
+    "focusKeyBgColor": "0xfff3Ab3c",
     "setup":
     {
+      "info": "Layout must have every row all even or all odd",
+      "uk0":
+      {
+        "layout": [
+          ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
+          ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+          [{"text": "↑", "type": "SHIFT"}, "a", "s", "d", "f", "g", "h", "j", "k", "l"],
+          [ "z", "x", "c", "v", "b", "n", "m", {"text": "←", "type": "DELETE"}],
+          [{"text": "    ", "type": "SPACE"}]
+        ]
+      },
       "uk":
       {
         "layout": [
           ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
           ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-          ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
-          [{"text": "↑", "type": "SHIFT"}, "z", "x", "c", "v", "b", "n", "m", {"text": "←", "type": "DELETE"}],
-          [ {"text": "    ", "type": "SPACE"}, "✔"]
+          ["a", "s", "d", "f", "g", "h", "j", "k", "l", {"text": "←", "type": "DELETE"}],
+          [ "z", "x", "c", "v", {"text": "   ", "type": "SPACE"}, "b", "n", "m"]
         ]
       }
-
     }
   },
   "VIEWPORT":
