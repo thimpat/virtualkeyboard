@@ -48,7 +48,6 @@ class VirtualKeyboard {
    */
   calculateOffsetRows() {
     this.#keys.map((line, num) => {
-      const offsetCharacters = this.#nbMaxCharsPerLine - this.#charactersPerLine[num]
 
       // Width
       this.#keyboardWidthX[num] = this.#charactersPerLine[num] * this.#singleKeyboardWidth
@@ -57,7 +56,6 @@ class VirtualKeyboard {
       this.#keyboardPositionX[num] =
         this.#keyboardDefaultPositionX +
         (this.#keyboardWidth - this.#keyboardWidthX[num]) / 2
-        // - offsetCharacters * this.#singleKeyboardWidth / 2
     })
   }
 
@@ -108,7 +106,7 @@ class VirtualKeyboard {
    * @returns {{rect: boolean, color: string, w: number, x: number, h: number, y: *}}
    */
   generateSurroundingRectangleItem(x, y, len) {
-    let rectangleWidth = this.#singleKeyboardWidth * len - this.#margin
+    const rectangleWidth = this.#singleKeyboardWidth * len - this.#margin
     const rectangleHeight = this.#singleKeyboardHeight - this.#margin
     const radius = 8
     const strokeWidth = 3
@@ -172,7 +170,7 @@ class VirtualKeyboard {
    * Generates list of keys with attribute for drawing in the canvas
    * @returns {{}}
    */
-  generateTemplateKeyboard() {
+  generateTemplate() {
     const keyboard = {}
     const keys = this.#keys
 

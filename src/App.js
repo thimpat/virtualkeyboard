@@ -17,37 +17,23 @@
  * limitations under the License.
  */
 
-import {Lightning, Utils, Log} from '@lightningjs/sdk'
-import {VIEWPORT} from "./settings.json"
+import { Lightning, Utils, Log } from '@lightningjs/sdk'
+import { VIEWPORT } from './settings.json'
 import virtualKeyboard from './VirtualKeyboard'
+import searchBox from './SearchBox'
 
 // console.info(keys[0][0])
 // console.info(JSON.stringify(keys[0][0]), null, 2)
 
-export default class App extends Lightning.Component {
+export default class App /*Lightning.Application, */ extends Lightning.Component {
   static getFonts() {
-    return [{family: 'Regular', url: Utils.asset('fonts/Roboto-Regular.ttf')}]
+    return [{ family: 'Regular', url: Utils.asset('fonts/Roboto-Regular.ttf') }]
   }
 
   static _template() {
-    // const options = {
-    //   Background: {
-    //     w: 1920,
-    //     h: 1080,
-    //     color: 0xfffbb03b,
-    //     src: Utils.asset('images/background.png'),
-    //   },
-    //   Logo: {
-    //     mountX: 0.5,
-    //     mountY: 1,
-    //     x: 960,
-    //     y: 600,
-    //     src: Utils.asset('images/logo.png'),
-    //   },
-
-
     virtualKeyboard.init()
-    const keyboardKeys = virtualKeyboard.generateTemplateKeyboard()
+    const keyboardTemplate = virtualKeyboard.generateTemplate()
+    const searchBoxTemplate = searchBox.generateTemplate()
 
     const keys = {
       Background: {
@@ -56,25 +42,42 @@ export default class App extends Lightning.Component {
         color: 0xfffbb03b,
         src: Utils.asset('images/background.png'),
       },
+      // Logo: {
+      //   mountX: 0.5,
+      //   mountY: 1,
+      //   x: 960,
+      //   y: 600,
+      //   src: Utils.asset('images/search.jpg'),
+      // },
+      // SearchBox: searchBoxTemplate,
+      // SearchBox: {
+      //   mountX: 0.5,
+      //   mountY: 1,
+      //   x: 960,
+      //   y: 600,
+      //   src: Utils.asset('images/search.png'),
+      // },
+      // SearchBox2: {
+      //   texture: lng.Tools.getRoundRect(400, 60, 4, 3, '0xffffffff', true, '0xffffffff'),
+      //   // Shadow: {
+      //   //   x: 10,
+      //   //   y: 10,
+      //   //   zIndex: 1,
+      //   //   color: 0x66000000,
+      //   //   texture: lng.Tools.getShadowRect(rectangleWidth, rectangleHeight, radius, blur, margin),
+      //   // },
+      // },
+      commandText: { x: 50, y: 28, text: { text: 'gffgfgfg', fontSize: 22 } },
     }
 
+    return { ...keys, ...keyboardTemplate, ...searchBoxTemplate }
+  }
 
-    // Background: {
-    //   w: 1920,
-    //   h: 1080,
-    //   color: 0xfffbb03b,
-    //   src: Utils.asset('images/background.png'),
-    // },
-    // "Textq":{"x":0,"y":0,"color":"0xffffffff","text":{"text":"q","fontFace":"Regular","fontSize":92}},
-    // ...keys
-
-    // console.info(stuff[0][0])
-    // console.info(JSON.stringify(stuff[0][0]), null, 2)
-    return {...keys, ...keyboardKeys}
+  set commandText(v) {
+    // this.tag('commandText').patch({ text: { text: `Animation command: ${v}` } })
   }
 
   _init() {
-
     this.tag('Background')
       .animation({
         duration: 15,
@@ -83,10 +86,55 @@ export default class App extends Lightning.Component {
           {
             t: '',
             p: 'color',
-            v: {0: {v: 0xfffbb03b}, 0.5: {v: 0xfff46730}, 0.8: {v: 0xfffbb03b}},
+            v: { 0: { v: 0xfffbb03b }, 0.5: { v: 0xfff46730 }, 0.8: { v: 0xfffbb03b } },
           },
         ],
       })
       .start()
+
+    // this._myAnimation = this.tag('Logo').animation({
+    //   duration: 3,
+    //   repeat: -1,
+    //   stopMethod: 'immediate',
+    //   actions: [
+    //     { p: 'y', v: { 0: { v: 450, sm: 0 }, 0.5: { v: 100, sm: 1 }, 1: { v: 450, sm: 0 } } },
+    //   ],
+    // })
+  }
+
+  _handleLeft() {
+    this.tag('Logo').stop()
+    this._myAnimation = this.tag('Logo')
+      .animation({
+        duration: 3,
+        repeat: -1,
+        stopMethod: 'immediate',
+        actions: [{ p: 'x', v: { 0: { v: 450, sm: 0 }, 0.5: { v: 100, sm: 1 } } }],
+      })
+      .start()
+
+    // this._myAnimation.start()
+  }
+
+  _handleRight() {
+    this.tag('Logo').stop()
+    this._myAnimation = this.tag('Logo')
+      .animation({
+        duration: 3,
+        repeat: -1,
+        stopMethod: 'immediate',
+        actions: [
+          { p: 'y', v: { 0: { v: 450, sm: 0 }, 0.5: { v: 100, sm: 1 }, 1: { v: 450, sm: 0 } } },
+        ],
+      })
+      .start()
+  }
+
+  _handleUp() {
+    alert(3)
+  }
+
+  _handleDown() {
+    alert(4)
   }
 }
