@@ -6,7 +6,7 @@ class VirtualKeyboard {
    * Original keyboard layout with rows and columns
    * @type {[string[]|number[]|{"text": string, "type": string}[]]}
    */
-  #layout = KEYBOARD.setup.uk.layout
+  #layout = []
 
   /**
    * keyboard layout with rows and columns to be used for navigation
@@ -108,6 +108,11 @@ class VirtualKeyboard {
     this.#singleKeyboardWidth = this.#keyboardWidth / this.#nbMaxCharsPerLine
   }
 
+  /**
+   * Returns number of characters present in a row
+   * @param rowNumber
+   * @returns {number|*}
+   */
   countCharactersRow(rowNumber) {
     if (!this.#charactersPerLine || !this.#charactersPerLine[rowNumber]) {
       console.error(`You must initialise the Virtual Keyboard before calling this method`)
@@ -149,7 +154,13 @@ class VirtualKeyboard {
    * Initialise virtual keyboard using settings file
    * Some values can be set live
    */
-  init({width, height, margin} = {width: VIEWPORT.width, height: VIEWPORT.height, margin: 10}) {
+  init({
+         width = VIEWPORT.width,
+         height = VIEWPORT.height,
+         margin = 10,
+         layoutName = KEYBOARD.setup.defaultLayout
+       } = {}) {
+    this.#layout = KEYBOARD.setup[layoutName].layout
     this.#keyboardHeight = KEYBOARD.viewportHeight
 
     this.#keyboardWidth = width * KEYBOARD.viewportPercentage / 100       // => 80% of the viewport width
@@ -172,7 +183,7 @@ class VirtualKeyboard {
   }
 
   /**
-   * Generate rectangle area for template
+   * Generate rectangle area
    * @param x
    * @param y
    * @param len
@@ -213,7 +224,7 @@ class VirtualKeyboard {
    * @param row
    * @returns {{rectangle: {rect: boolean, color: string, w: number, x: number, h: number, y: *}, key: {}}|{}}
    */
-  generateSingleKeyTemplate(chars, col, row) {
+  generateSingleKeyItem(chars, col, row) {
 
     if (chars === undefined) {
       console.error(`Found key without text: `, chars)
@@ -259,7 +270,7 @@ class VirtualKeyboard {
         const objInput = VirtualKeyboard.convertEntryToKeyObject(input)
         const chars = objInput.text
 
-        const obj = this.generateSingleKeyTemplate(chars, count, iRow)
+        const obj = this.generateSingleKeyItem(chars, count, iRow)
         count += chars.length
         const key = obj.key
         if (!key) {
@@ -277,8 +288,11 @@ class VirtualKeyboard {
         objInput.textTag = textTag
         objInput.rectangleTag = rectangleTag
 
-        for (let iChar = 0; iChar < chars.length; ++iChar)
-        {
+        if ("DELETE" === objInput.type) {
+          objInput.text = KEYBOARD.setup.deleteSymbol
+        }
+
+        for (let iChar = 0; iChar < chars.length; ++iChar) {
           this.#convertedLayout[iRow].push(objInput)
         }
       }
@@ -294,6 +308,10 @@ class VirtualKeyboard {
   // =================================================
   // User actions
   // =================================================
+  /**
+   * Returns focused key object
+   * @returns {{text: string, type: string}}
+   */
   getActiveTags() {
     const row = this.#convertedLayout[this.#cursorY]
     return row[this.#cursorX]
@@ -307,20 +325,6 @@ class VirtualKeyboard {
     const isLimitRight = this.#cursorX >= this.#convertedLayout[this.#cursorY].length - 1
     const isLimitTop = this.#cursorY <= 0
     const isLimitBottom = this.#cursorY >= this.#convertedLayout[this.#cursorY].length - 1
-
-    // const gridXdPosition = this.getGridInfo(this.#cursorY, this.#cursorX).gridPosition
-    // const gridDownPositions = this.getGridRow(this.#cursorY + 1)
-
-    // console.log(gridXdPosition, gridDownPositions)
-
-    // let newX = -1
-    // let canGoDown = false
-    // if (this.#cursorY < this.countRows()) {
-    //   canGoDown = gridXdPosition >= gridDownPositions.leftGrid && gridXdPosition <= gridDownPositions.rightGrid
-    //   if (canGoDown) {
-    //     newX = this.getGridInfo(this.#cursorY + 1, this.#cursorX)
-    //   }
-    // }
 
     const row = this.#convertedLayout[this.#cursorY]
 
@@ -338,8 +342,6 @@ class VirtualKeyboard {
       isLimitRight,
       isLimitTop,
       isLimitBottom,
-      // canGoDown,
-      // newX
     }
 
     console.log(result)
@@ -347,48 +349,17 @@ class VirtualKeyboard {
     return result
   }
 
-  getGridInfo(row, col) {
-    if (row < 0 || row >= this.countRows()) {
-      return null
-    }
-
-    const startX = Math.floor((this.#nbMaxCharsPerLine - this.countCharactersRow(row)) / 2)
-    // const endX = startX + this.countCharactersRow(row)
-
-    // col position in the grid
-    const gridPosition = startX + col
-
-    // col position
-    const keyPosition = gridPosition - startX
-
-    return {
-      gridPosition,
-      keyPosition
-    }
-  }
-
-  getGridRow(row) {
-    const leftGrid = this.getGridInfo(row, 0).gridPosition
-    const rightGrid = this.getGridInfo(row, this.countCharactersRow(row)).gridPosition
-
-    return {
-      leftGrid, rightGrid
-    }
-  }
-
-  cloneCursorInformation() {
-    const clone = JSON.parse(JSON.stringify(this.#pointer))
-    console.log(clone)
-    return clone
+  cloneCursorInformation(pointer = this.#pointer) {
+    return JSON.parse(JSON.stringify(pointer))
   }
 
   moveCursorUp() {
-    if (this.#cursorY <= 0)
-    {
+    if (this.#cursorY <= 0) {
       return
     }
 
     --this.#cursorY
+
     this.#pointer = this.getCursorInfo()
     return this.cloneCursorInformation()
   }
@@ -401,30 +372,25 @@ class VirtualKeyboard {
     ++this.#cursorY
     this.#cursorX = this.#pointer.newX.keyPosition
     this.#pointer = this.getCursorInfo()
-    return this.cloneCursorInformation()
   }
 
   moveCursorDown() {
-    if (this.#cursorY >= this.countRows() - 1)
-    {
+    if (this.#cursorY >= this.countRows() - 1) {
       return
     }
 
     ++this.#cursorY
     this.#pointer = this.getCursorInfo()
-    return this.cloneCursorInformation()
   }
 
   moveCursorLeft() {
     this.#cursorX = this.#pointer.isLimitLeft ? this.countCharactersRow(this.#cursorY) - 1 : --this.#cursorX
     this.#pointer = this.getCursorInfo()
-    return this.cloneCursorInformation()
   }
 
   moveCursorRight() {
     this.#cursorX = this.#pointer.isLimitRight ? 0 : ++this.#cursorX
     this.#pointer = this.getCursorInfo()
-    return this.cloneCursorInformation()
   }
 }
 

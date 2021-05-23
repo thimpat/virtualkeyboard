@@ -27,18 +27,14 @@ import { VIEWPORT, KEYBOARD } from './settings.json'
 import virtualKeyboard from './VirtualKeyboard'
 import searchBox from './SearchBox'
 
-export default class App /*Lightning.Application, */ extends Lightning.Component {
+export default class App extends Lightning.Component {
   static getFonts() {
     return [{ family: 'Regular', url: Utils.asset('fonts/Roboto-Regular.ttf') }]
   }
 
   updateButton(properties, textColor, bgColor, colorLeft, colorRight) {
-    const textElement = this.tag(properties.textTag)
-    const rectangleElement = this.tag(properties.rectangleTag)
-    textElement.text.textColor = textColor
-    rectangleElement.color = bgColor
-    rectangleElement.colorLeft = colorLeft
-    rectangleElement.colorRight = colorRight
+    this.tag(properties.textTag).patch({ text: { textColor } })
+    this.tag(properties.rectangleTag).patch({ color: bgColor, colorLeft, colorRight })
   }
 
   clearActiveButton() {
@@ -64,9 +60,7 @@ export default class App /*Lightning.Application, */ extends Lightning.Component
   }
 
   static _template() {
-    virtualKeyboard.init()
-    const keyboardTemplate = virtualKeyboard.generateTemplate()
-
+    const keyboardTemplate = virtualKeyboard.init({ layoutName: 'uk' }).generateTemplate()
     const searchBoxTemplate = searchBox.init().generateTemplate()
 
     const keys = {
@@ -76,7 +70,6 @@ export default class App /*Lightning.Application, */ extends Lightning.Component
         color: 0xfffbb03b,
         src: Utils.asset('images/background.png'),
       },
-      SearchText: { x: 0, y: 0, text: { text: 'gffgfgfg', fontSize: 92, color: '0xff000000' } },
     }
 
     return { ...keys, ...keyboardTemplate, ...searchBoxTemplate }
@@ -129,10 +122,18 @@ export default class App /*Lightning.Application, */ extends Lightning.Component
    * @private
    */
   _handleEnter() {
-    this.tag('SearchText').text.text = 'Search'
+    const properties = virtualKeyboard.getActiveTags()
+    const character = properties.text
+    if (character === KEYBOARD.setup.deleteSymbol) {
+      this._handleBack()
+      return
+    }
+    searchBox.addCharacter(character)
+    this.tag('SearchText').text.text = searchBox.getText()
   }
 
   _handleBack() {
-    alert(3234)
+    searchBox.deleteLastCharacter()
+    this.tag('SearchText').text.text = searchBox.getText()
   }
 }

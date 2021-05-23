@@ -1,8 +1,12 @@
 {
   "SEARCHBOX":
   {
-    "height": 60,
-    "top": 60
+    "height": 80,
+    "top": 60,
+    "textColor": "0xff000000",
+    "fontSize": 54,
+    "calibrateY": -30,
+    "maxChars": 30
   },
   "KEYBOARD":
   {
@@ -19,23 +23,37 @@
     "setup":
     {
       "info": "Layout must have every row all even or all odd",
-      "uk0":
+      "deleteSymbol": "←",
+      "defaultLayout": "uk",
+      "uk":
       {
+        "description": "UK Layout",
         "layout": [
           ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
           ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
           [{"text": "↑", "type": "SHIFT"}, "a", "s", "d", "f", "g", "h", "j", "k", "l"],
           [ "z", "x", "c", "v", "b", "n", "m", {"text": "←", "type": "DELETE"}],
-          [{"text": "    ", "type": "SPACE"}]
+          [{"text": "          ", "type": "SPACE"}]
         ]
       },
-      "uk":
+      "fr":
       {
+        "description": "French Layout",
         "layout": [
           ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
           ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
           ["a", "s", "d", "f", "g", "h", "j", "k", "l", {"text": "←", "type": "DELETE"}],
           [ "z", "x", "c", "v", {"text": "   ", "type": "SPACE"}, "b", "n", "m"]
+        ]
+      },
+      "kid":
+      {
+        "description": "Kid Layout",
+        "layout": [
+          ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
+          ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+          ["k", "l", "m", "n", "o", "p", "q", "r", "s", {"text": "←", "type": "DELETE"}],
+          [ "t", "u", "v", "w", {"text": "   ", "type": "SPACE"}, "x", "y", "z"]
         ]
       }
     }
