@@ -24,7 +24,7 @@
     {
       "info": "Layout must have every row all even or all odd",
       "deleteSymbol": "←",
-      "defaultLayout": "uk",
+      "defaultLayout": "fr",
       "uk":
       {
         "description": "UK Layout",
@@ -41,9 +41,20 @@
         "description": "French Layout",
         "layout": [
           ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
-          ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-          ["a", "s", "d", "f", "g", "h", "j", "k", "l", {"text": "←", "type": "DELETE"}],
-          [ "z", "x", "c", "v", {"text": "   ", "type": "SPACE"}, "b", "n", "m"]
+          ["a", "z", "e", "r", "t", "y", "u", "i", "o", "p"],
+          ["q", "s", "d", "f", "g", "h", "j", "k", "l"],
+          [ "w", "x", "c", "v", "b", "n", "m"],
+          [ {"text": "   ", "type": "SPACE"}, {"text": "←", "type": "DELETE"}]
+        ]
+      },
+      "square":
+      {
+        "description": "French Layout",
+        "layout": [
+          ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
+          ["a", "z", "e", "r", "t", "y", "u", "i", "o", "p"],
+          ["q", "s", "d", "f", "g", "h", "j", "k", "l", {"text": "←", "type": "DELETE"}],
+          [ "w", "x", "c", "v", {"text": "   ", "type": "SPACE"}, "b", "n", "m"]
         ]
       },
       "kid":
@@ -52,15 +63,17 @@
         "layout": [
           ["1", 2, 3, 4, 5, 6, 7, 8, 9, 0],
           ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
-          ["k", "l", "m", "n", "o", "p", "q", "r", "s", {"text": "←", "type": "DELETE"}],
-          [ "t", "u", "v", "w", {"text": "   ", "type": "SPACE"}, "x", "y", "z"]
+          ["k", "l", "m", "n", "o", "p", "q", "r"],
+          [ "s", "t", "u", "v", "w", "x"],
+          ["y", "z"],
+          [ {"text": "   ", "type": "SPACE"}, {"text": "←", "type": "DELETE"}]
         ]
       }
     }
   },
   "VIEWPORT":
   {
-    "height": 1080,
+    "height": 900,
     "width": 1920
   }
 }

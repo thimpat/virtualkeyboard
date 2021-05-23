@@ -60,13 +60,13 @@ export default class App extends Lightning.Component {
   }
 
   static _template() {
-    const keyboardTemplate = virtualKeyboard.init({ layoutName: 'uk' }).generateTemplate()
+    const keyboardTemplate = virtualKeyboard.init(/*{ layoutName: 'uk' }*/).generateTemplate()
     const searchBoxTemplate = searchBox.init().generateTemplate()
 
     const keys = {
       Background: {
         w: VIEWPORT.width,
-        h: 1080,
+        h: VIEWPORT.height,
         color: 0xfffbb03b,
         src: Utils.asset('images/background.png'),
       },

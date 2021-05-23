@@ -251,6 +251,33 @@ class VirtualKeyboard {
   }
 
   /**
+   * Normalise template to support any sort of layout
+   * @param finalRow
+   */
+  finaliseTemplate(finalRow) {
+    if (finalRow.length < this.#nbMaxCharsPerLine) {
+      const first = JSON.parse(JSON.stringify(finalRow[0]))
+      const last = JSON.parse(JSON.stringify(finalRow[finalRow.length - 1]))
+      first.dead = true
+      first.side = 1
+      last.dead = true
+      last.side = -1
+
+      do {
+        finalRow.unshift(first)
+        finalRow.push(last)
+      }
+      while (finalRow.length < this.#nbMaxCharsPerLine)
+
+      if (finalRow.length > this.#nbMaxCharsPerLine) {
+        finalRow.pop()
+      }
+
+    }
+
+  }
+
+  /**
    * Generates list of keys with attribute for drawing in the canvas
    * @returns {{}}
    */
@@ -293,10 +320,17 @@ class VirtualKeyboard {
         }
 
         for (let iChar = 0; iChar < chars.length; ++iChar) {
-          this.#convertedLayout[iRow].push(objInput)
+          objInput.dead = false
+          if (iChar < chars.length - 1)
+          {
+            objInput.dead = true
+            objInput.side = 1
+          }
+          this.#convertedLayout[iRow].push(JSON.parse(JSON.stringify(objInput)))
         }
       }
 
+      this.finaliseTemplate(this.#convertedLayout[iRow])
     }
 
     this.#pointer = this.getCursorInfo()
@@ -353,6 +387,30 @@ class VirtualKeyboard {
     return JSON.parse(JSON.stringify(pointer))
   }
 
+  reviewHorizontalPosition(direction) {
+    let key = this.#convertedLayout[this.#cursorY][this.#cursorX]
+
+    if (!key.dead)
+    {
+      return
+    }
+
+    direction = direction || key.side
+    do {
+      const nChars = this.#convertedLayout[this.#cursorY].length
+      this.#cursorX += direction
+      if (this.#cursorX < 0 && direction < 0) {
+        this.#cursorX = nChars - 1
+      }
+      else if (this.#cursorX >= nChars && direction > 0)
+      {
+        this.#cursorX = 0
+      }
+    }
+    while (this.#convertedLayout[this.#cursorY][this.#cursorX].dead === true)
+  }
+
+
   moveCursorUp() {
     if (this.#cursorY <= 0) {
       return
@@ -360,18 +418,10 @@ class VirtualKeyboard {
 
     --this.#cursorY
 
+    this.reviewHorizontalPosition()
+
     this.#pointer = this.getCursorInfo()
     return this.cloneCursorInformation()
-  }
-
-  moveCursorDown0() {
-    if (!this.#pointer.canGoDown) {
-      return
-    }
-
-    ++this.#cursorY
-    this.#cursorX = this.#pointer.newX.keyPosition
-    this.#pointer = this.getCursorInfo()
   }
 
   moveCursorDown() {
@@ -380,16 +430,21 @@ class VirtualKeyboard {
     }
 
     ++this.#cursorY
+
+    this.reviewHorizontalPosition()
+
     this.#pointer = this.getCursorInfo()
   }
 
   moveCursorLeft() {
     this.#cursorX = this.#pointer.isLimitLeft ? this.countCharactersRow(this.#cursorY) - 1 : --this.#cursorX
+    this.reviewHorizontalPosition(-1)
     this.#pointer = this.getCursorInfo()
   }
 
   moveCursorRight() {
     this.#cursorX = this.#pointer.isLimitRight ? 0 : ++this.#cursorX
+    this.reviewHorizontalPosition(1)
     this.#pointer = this.getCursorInfo()
   }
 }

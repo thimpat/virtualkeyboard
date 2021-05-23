@@ -1,5 +1,10 @@
 # Virtual Keyboard
 
+## Layout
+### To use the UK layout, set "defaultLayout": "uk" in settings.json.
+Layouts supported:
+uk, fr, kid, square
+
 ## com.metrological.app.virtualkeyboard
 
 ### Getting started
