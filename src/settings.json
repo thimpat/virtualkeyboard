@@ -24,7 +24,7 @@
     {
       "info": "Layout must have every row all even or all odd",
       "deleteSymbol": "←",
-      "defaultLayout": "fr",
+      "defaultLayout": "uk",
       "uk":
       {
         "description": "UK Layout",

@@ -5,6 +5,15 @@
 Layouts supported:
 uk, fr, kid, square
 
+![alt text](docs/layouts/uk.gif "uk")
+
+![alt text](docs/layouts/kid.png "kid")
+
+![alt text](docs/layouts/fr.png "fr")
+
+![alt text](docs/layouts/square.png "square")
+
+
 ## com.metrological.app.virtualkeyboard
 
 ### Getting started

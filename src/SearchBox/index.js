@@ -62,6 +62,11 @@ class SearchBox {
     if (this.#contentArray.length >= this.#maxChars) {
       return
     }
+
+    if (char.length > 1)
+    {
+      char = char[0]
+    }
     this.#contentArray.push(char.toUpperCase())
   }
 
